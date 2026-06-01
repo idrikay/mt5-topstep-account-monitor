@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-dashboard
+  namespace: apps
+  labels:
+    app: trading-dashboard
+spec:
+  selector:
+    app: trading-dashboard
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+
+  # ClientIP affinity ensures Socket.IO WebSocket connections always land on
+  # the same pod for the lifetime of the session.  Without this, HTTP
+  # long-polling fallbacks and reconnects may hit different pods and lose
+  # in-memory state.  If you scale to multiple replicas in the future,
+  # replace this with a Redis Socket.IO adapter and remove the affinity.
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600    # 1 hour — matches a typical trading session
+
+  # Use LoadBalancer for direct external access on DigitalOcean.
+  # Replace with ClusterIP + an Ingress if you add TLS termination or
+  # want to share a load balancer across multiple services.
+  type: LoadBalancer

@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trading-dashboard-netpol
+  namespace: apps
+spec:
+  podSelector:
+    matchLabels:
+      app: trading-dashboard
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Accept inbound traffic on the application port only.
+    # Source is unrestricted because the pod sits behind a DigitalOcean
+    # LoadBalancer whose node-level source IP is not predictable.
+    - ports:
+        - port: 3010
+          protocol: TCP
+
+  egress:
+    # DNS — required for all outbound hostname resolution.
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # HTTPS — MetaAPI streaming/RPC, TopStepX REST + SignalR.
+    # Locking down by CIDR is impractical here because both providers use
+    # CDN-backed, multi-region endpoints with frequently rotating IPs.
+    - ports:
+        - port: 443
+          protocol: TCP
+
+    # HTTP — covers any redirect hops before TLS upgrade.
+    - ports:
+        - port: 80
+          protocol: TCP

@@ -1,0 +1,1029 @@
+.app-container {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.app-header {
+  background: #ffffff;
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.connection-status.connected {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.connection-status.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.main-content {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Panel Styles */
+.panel {
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #0f172a;
+}
+
+.panel-icon {
+  font-size: 1.5rem;
+}
+
+.total-pnl, .total-balance {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+}
+
+.total-pnl.positive {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.total-pnl.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.toggle-panel-btn {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.toggle-panel-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.panel-content {
+  padding: 1.5rem;
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.panel-content.collapsed {
+  max-height: 0;
+  padding: 0 1.5rem;
+}
+
+/* Positions Grid */
+.positions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+}
+
+.position-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.position-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.position-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.position-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contract-id {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.position-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.position-type.long {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.position-type.short {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.position-pnl {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.position-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.detail-label {
+  color: #64748b;
+}
+
+.detail-value {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.position-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.market-data-note {
+  color: #64748b;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Accounts Grid */
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.account-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.account-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.account-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.account-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.account-balance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.account-pnl {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+}
+
+.account-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.trades-section, .positions-section {
+  margin-top: 1rem;
+}
+
+.trades-section h4, .positions-section h4 {
+  font-size: 0.875rem;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.trades-list, .positions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.trade-item {
+  background: #ffffff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.trade-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}
+
+.trade-contract {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.trade-side {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.trade-side.buy {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.trade-side.sell {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.trade-size, .trade-price {
+  color: #64748b;
+}
+
+.trade-pnl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.trade-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.position-item {
+  background: #ffffff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.position-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.position-contract {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.position-size, .position-entry {
+  color: #64748b;
+}
+
+/* PnL Classes */
+.positive {
+  color: #059669;
+}
+
+.negative {
+  color: #dc2626;
+}
+
+.neutral {
+  color: #64748b;
+}
+
+.breakeven {
+  color: #d97706;
+}
+
+/* Scrollbar Styling */
+.trades-list::-webkit-scrollbar,
+.positions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trades-list::-webkit-scrollbar-track,
+.positions-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.trades-list::-webkit-scrollbar-thumb,
+.positions-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.trades-list::-webkit-scrollbar-thumb:hover,
+.positions-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .positions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .panel-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .positions-grid,
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .account-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Daily Stats Panel */
+.daily-stats-panel {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.daily-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.stat-card.primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-color: #6366f1;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  opacity: 0.9;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #475569;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card.primary .stat-label {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card.primary .stat-value {
+  color: #ffffff;
+}
+
+.stat-sublabel {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.stat-card.primary .stat-sublabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Breakeven note */
+.breakeven-note {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(217, 119, 6, 0.1);
+  border-left: 3px solid #d97706;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+/* Trade label for breakeven indicator */
+.trade-label {
+  font-size: 0.65rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  background: rgba(217, 119, 6, 0.15);
+  color: #92400e;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .daily-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .daily-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .daily-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-icon {
+    font-size: 2rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* Panel Badges */
+.panel-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.practice-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+.live-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.derivative-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #ff006a;
+}
+
+/* Practice Panel Styling */
+.practice-panel .panel-header {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-bottom: 2px solid #93c5fd;
+}
+
+.practice-panel .stat-card.primary.practice {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+}
+
+/* Derivative Panel Styling */
+.derivative-panel .panel-header {
+  background: linear-gradient(135deg, #ffeffa 0%, #ffeffa 100%);
+  border-bottom: 2px solid #ff006a;
+}
+
+.derivative-panel .stat-card.primary.derivative {
+  background: linear-gradient(135deg, #f63bd7 0%, #ff67c5 100%);
+  border-color: #ff006a;
+}
+
+/* Real Panel Styling */
+.real-panel .panel-header {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-bottom: 2px solid #86efac;
+}
+
+.real-panel .stat-card.primary.live {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+}
+
+.total-panel .panel-header {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fceadc 100%);
+  border-bottom: 2px solid #efca86;
+}
+
+.total-panel .stat-card.primary.live {
+  background: linear-gradient(135deg, #b97510 0%, #968005 100%);
+  border-color: #b97510;
+}
+
+/* Account Type Badges */
+.account-type-badge {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.account-type-badge.practice {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+.account-type-badge.derivative {
+  background: rgba(59, 130, 246, 0.15);
+  color: #ff006a;
+}
+
+.account-type-badge.live {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.account-header h3 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Platform Color Classes */
+.platform-topstep {
+  color: #00ff4c !important;
+  font-weight: 600;
+}
+
+.platform-capital {
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
+.platform-mt5 {
+  color: #8b5cf6 !important;
+  font-weight: 600;
+}
+
+.platform-daytraders {
+  color: #f59e0b !important;
+  font-weight: 600;
+}
+
+.platform-aquafutures {
+  color: #ef4444 !important;
+  font-weight: 600;
+}
+
+.platform-default {
+  color: #3b82f6 !important;
+  font-weight: 600;
+}
+
+/* Duration Row Styling */
+.duration-row {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.duration-value {
+  color: #059669 !important;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Pulse animation for duration to show it's live */
+@keyframes duration-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.duration-value {
+  animation: duration-pulse 2s ease-in-out infinite;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #1976D2;
+}
+
+/* MT5 Panel Styles */
+.mt5-panel {
+  border-left: 4px solid #9C27B0;
+}
+
+.mt5-badge {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2) !important;
+}
+
+.stat-card.primary.mt5 {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  color: white;
+}
+
+/* MT5 Position Card */
+.position-card.mt5-position {
+  border-left: 3px solid #9C27B0;
+}
+
+.platform-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.platform-tag.mt5-tag {
+  background: #9C27B0;
+  color: white;
+}
+
+.platform-tag.topstep-tag {
+  background: #2196F3;
+  color: white;
+}
+
+/* MT5 Account Card */
+.account-card.mt5-account {
+  border-left: 4px solid #9C27B0;
+}
+
+.account-card.projectx-account {
+  border-left: 4px solid #00ff4c;
+}
+
+.account-card.daytraders-account {
+  border-left: 4px solid #f59e0b;
+}
+
+.account-type-badge.mt5 {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2) !important;
+  color: white !important;
+}
+
+/* MT5 Account Info Grid */
+.mt5-account-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  background: rgba(156, 39, 176, 0.05);
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.mt5-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mt5-stat-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mt5-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.mt5-stat-value.warning {
+  color: #FF9800;
+}
+
+.mt5-stat-value.danger {
+  color: #F44336;
+}
+
+/* Balance display updates */
+.balance-main {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.balance-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+/* Equity display in header */
+.equity-display {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Position type badges in account cards */
+.position-type-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.position-type-badge.long {
+  background: #4CAF50;
+  color: white;
+}
+
+.position-type-badge.short {
+  background: #F44336;
+  color: white;
+}
+
+/* Platform-specific colors */
+.platform-mt5 {
+  color: #9C27B0 !important;
+  font-weight: 600;
+}
+
+.platform-topstep {
+  color: #2196F3 !important;
+  font-weight: 600;
+}
+
+/* Trade type styling for MT5 */
+.trade-side.buy,
+.trade-side[class*="BUY"] {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.trade-side.sell,
+.trade-side[class*="SELL"] {
+  color: #F44336;
+  font-weight: 600;
+}
+
+/* Position details for SL/TP */
+.detail-row .detail-value.positive {
+  color: #4CAF50;
+}
+
+.detail-row .detail-value.negative {
+  color: #F44336;
+}
+
+/* Responsive adjustments for MT5 info */
+@media (max-width: 768px) {
+  .mt5-account-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .equity-display {
+    display: block;
+    margin-top: 4px;
+  }
+}
+
+isconnected.styles · CSS
+/* ── Disconnected banner ─────────────────────────────────────────────────── */
+ 
+.disconnected-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: #7c3d00;
+  color: #fde68a;
+  font-size: 0.875rem;
+  border-bottom: 2px solid #f97316;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+ 
+.disconnected-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+ 
+.reconnecting-label {
+  margin-left: auto;
+  opacity: 0.75;
+  font-style: italic;
+}
+ 
+/* ── Stale content ───────────────────────────────────────────────────────── */
+ 
+/* Dim all panels when the connection is down so it's visually clear
+   that the numbers shown are not live. */
+.main-content.stale .panel {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+ 
+/* Keep the banner and header fully visible. */
+.main-content.stale .panel-header {
+  pointer-events: auto;
+}
+ 

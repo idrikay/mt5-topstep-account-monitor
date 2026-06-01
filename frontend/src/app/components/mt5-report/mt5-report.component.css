@@ -1,0 +1,407 @@
+.mt5-report-container {
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Styles */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.report-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.connection-status {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+}
+
+.connection-status.connected {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Controls Section */
+.report-controls {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.date-inputs {
+  display: flex;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.date-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+/* Buttons */
+.generate-btn {
+  padding: 10px 24px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  min-width: 150px;
+}
+
+.generate-btn:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.generate-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Messages */
+.error-message {
+  padding: 12px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Account Tabs */
+.account-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #1976d2;
+}
+
+.tab-btn.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  font-weight: 500;
+}
+
+.badge {
+  background: #e0e0e0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.tab-btn.active .badge {
+  background: #1976d2;
+  color: white;
+}
+
+/* Account Summary */
+.account-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  padding: 15px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: box-shadow 0.3s;
+}
+
+.summary-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.summary-card .label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-card .value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Table Container */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Trades Table */
+.trades-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 1200px;
+}
+
+.trades-table thead {
+  background: #f5f5f5;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.trades-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.trades-table td {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.trades-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.trades-table tbody tr.profitable {
+  background: #f1f8f4;
+}
+
+.trades-table tbody tr.profitable:hover {
+  background: #e8f5e9;
+}
+
+/* Type Cell Styling */
+.type-cell {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.type-cell.long {
+  color: #4caf50;
+}
+
+.type-cell.short {
+  color: #f44336;
+}
+
+/* P&L Styling */
+.positive {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.negative {
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Export Options */
+.export-options {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.export-btn {
+  padding: 8px 16px;
+  background: white;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.export-btn:hover {
+  background: #1976d2;
+  color: white;
+}
+
+/* No Data Message */
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .report-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-inputs {
+    flex-direction: column;
+  }
+
+  .generate-btn {
+    width: 100%;
+  }
+
+  .account-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .export-options {
+    flex-direction: column;
+  }
+
+  .export-btn {
+    width: 100%;
+  }
+
+  .account-tabs {
+    overflow-x: scroll;
+  }
+}
+
+@media (max-width: 1200px) {
+  .table-container {
+    overflow-x: scroll;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .report-controls,
+  .export-options,
+  .account-tabs {
+    display: none;
+  }
+
+  .trades-table {
+    font-size: 12px;
+  }
+
+  .trades-table th,
+  .trades-table td {
+    padding: 8px;
+  }
+}
+
+.trades-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.trades-table th.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.trades-table th.sorted {
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+.trades-table th.sortable::after {
+  content: ' ⇅';
+  opacity: 0.3;
+  font-size: 0.8em;
+}
+
+.trades-table th.sorted::after {
+  content: '';
+}

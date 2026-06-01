@@ -1,0 +1,171 @@
+name: Build & Deploy trading-dashboard
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  APP_NAME:  trading-dashboard
+  NAMESPACE: apps
+  IMAGE:     ghcr.io/${{ github.repository_owner }}/trading-dashboard
+
+jobs:
+  # ─── 1. BUILD & PUSH ──────────────────────────────────────────────────────
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Short SHA keeps image tags readable in the registry dashboard.
+      - name: Compute image tag
+        id: meta
+        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg REPO_URL="https://github.com/${{ github.repository }}" \
+            -t ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }} \
+            -t ${{ env.IMAGE }}:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.IMAGE }}:latest
+
+      # Scan the pushed image for known CVEs before allowing the deploy job
+      # to run.  HIGH and CRITICAL findings fail the pipeline.
+      # ignore-unfixed skips vulnerabilities that have no upstream fix,
+      # avoiding noise from unactionable findings.
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref:      ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+          format:         table
+          exit-code:      '1'
+          severity:       CRITICAL
+          ignore-unfixed: true
+          trivyignores:   .trivyignore
+
+  # ─── 2. DEPLOY ────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to DOKS
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN_DEPLOY_APPS }}
+
+      - name: Save kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
+
+      - name: Ensure namespace exists
+        run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply ConfigMap
+        run: kubectl apply -f k8s/configmap.yaml -n ${{ env.NAMESPACE }}
+
+      # All account credentials are stored as GitHub Actions secrets
+      # (Settings → Secrets → Actions) and injected here.
+      #
+      # Delete then recreate is used instead of --dry-run | apply because
+      # apply requires the secret to have been created with --save-config.
+      # --ignore-not-found makes the delete a no-op on first deploy.
+      #
+      # ── Adding more accounts ───────────────────────────────────────────────
+      # 1. Add the new credentials to GitHub Actions secrets, e.g.:
+      #      MT5_2_ACCOUNT_ID, TOPSTEP_2_USERNAME, TOPSTEP_2_API_KEY
+      # 2. Add a matching --from-literal line below for each new secret.
+      # 3. For non-sensitive values (account names), add them to configmap.yaml.
+      # config/accounts.js picks up MT5_N_* and TOPSTEP_N_* automatically —
+      # no code changes needed.
+      - name: Create or update credentials secret
+        # Secrets are passed as env vars rather than inline shell substitutions
+        # so that special characters in values are handled safely by the shell.
+        # To add account 2+: add the secrets to GitHub Actions settings, then
+        # uncomment the matching env var and --from-literal lines below.
+        env:
+          METAAPI_TOKEN:      ${{ secrets.METAAPI_TOKEN }}
+          MT5_1_ACCOUNT_ID:   ${{ secrets.MT5_1_ACCOUNT_ID }}
+          TOPSTEP_1_USERNAME: ${{ secrets.TOPSTEP_1_USERNAME }}
+          TOPSTEP_1_API_KEY:  ${{ secrets.TOPSTEP_1_API_KEY }}
+          # MT5_2_ACCOUNT_ID:   ${{ secrets.MT5_2_ACCOUNT_ID }}
+          # TOPSTEP_2_USERNAME: ${{ secrets.TOPSTEP_2_USERNAME }}
+          # TOPSTEP_2_API_KEY:  ${{ secrets.TOPSTEP_2_API_KEY }}
+          # MT5_3_ACCOUNT_ID:   ${{ secrets.MT5_3_ACCOUNT_ID }}
+          # TOPSTEP_3_USERNAME: ${{ secrets.TOPSTEP_3_USERNAME }}
+          # TOPSTEP_3_API_KEY:  ${{ secrets.TOPSTEP_3_API_KEY }}
+        run: |
+          kubectl delete secret trading-dashboard-credentials \
+            --namespace ${{ env.NAMESPACE }} --ignore-not-found
+
+          kubectl create secret generic trading-dashboard-credentials \
+            --namespace ${{ env.NAMESPACE }} \
+            --from-literal=METAAPI_TOKEN="$METAAPI_TOKEN" \
+            --from-literal=MT5_1_ACCOUNT_ID="$MT5_1_ACCOUNT_ID" \
+            --from-literal=TOPSTEP_1_USERNAME="$TOPSTEP_1_USERNAME" \
+            --from-literal=TOPSTEP_1_API_KEY="$TOPSTEP_1_API_KEY"
+          # ── Account 2 (uncomment env vars above and lines below) ────────────
+          # --from-literal=MT5_2_ACCOUNT_ID="$MT5_2_ACCOUNT_ID" \
+          # --from-literal=TOPSTEP_2_USERNAME="$TOPSTEP_2_USERNAME" \
+          # --from-literal=TOPSTEP_2_API_KEY="$TOPSTEP_2_API_KEY"
+          # ── Account 3 ────────────────────────────────────────────────────────
+          # --from-literal=MT5_3_ACCOUNT_ID="$MT5_3_ACCOUNT_ID" \
+          # --from-literal=TOPSTEP_3_USERNAME="$TOPSTEP_3_USERNAME" \
+          # --from-literal=TOPSTEP_3_API_KEY="$TOPSTEP_3_API_KEY"
+
+      # secret.template.yaml is intentionally excluded — the live Secret is
+      # managed by the step above.
+      #
+      # sed substitutes the IMAGE placeholder in deployment.yaml at deploy time
+      # so the manifest never contains a hardcoded registry owner.
+      - name: Apply manifests
+        run: |
+          sed "s|IMAGE_PLACEHOLDER|${{ env.IMAGE }}:${{ needs.build.outputs.image_tag }}|g" \
+            k8s/deployment.yaml | kubectl apply -f - -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/service.yaml       -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/serviceaccount.yaml  -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/networkpolicy.yaml   -n ${{ env.NAMESPACE }}
+          kubectl apply -f k8s/pdb.yaml             -n ${{ env.NAMESPACE }}
+          kubectl set image deployment/${{ env.APP_NAME }} \
+            ${{ env.APP_NAME }}=${{ env.IMAGE }}:${{ needs.build.outputs.image_tag }} \
+            --namespace ${{ env.NAMESPACE }}
+
+      # Blocks until all pods pass readiness probes.  If the rollout doesn't
+      # complete within 3 minutes, the step fails and the previous pods remain
+      # running — no broken deployment without a fallback.
+      # The timeout is longer than the example because MetaAPI's initial
+      # synchronization can take up to 2 minutes on a cold start.
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/${{ env.APP_NAME }} \
+            --namespace ${{ env.NAMESPACE }} \
+            --timeout=180s
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  ✅  ${{ env.APP_NAME }} deployed successfully"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-dashboard
+  namespace: apps
+  labels:
+    app: trading-dashboard
+spec:
+  replicas: 1
+  # Zero-downtime rolling update: bring the new pod healthy before the old one
+  # is terminated.  maxUnavailable: 0 guarantees continuous availability.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: trading-dashboard
+
+  template:
+    metadata:
+      labels:
+        app: trading-dashboard
+
+    spec:
+      serviceAccountName: trading-dashboard
+      # The application does not call the Kubernetes API, so the auto-mounted
+      # service account token is explicitly disabled at the pod level as well.
+      automountServiceAccountToken: false
+
+      # ── Pod-level security ──────────────────────────────────────────────────
+      securityContext:
+        runAsNonRoot: true
+        runAsUser:    1001
+        runAsGroup:   1001
+        # Prevent privilege escalation via setuid binaries in the base image.
+        # fsGroup lets the mounted volumes be readable by the app user.
+        fsGroup:      1001
+
+      # Allow graceful WebSocket drain before the pod is terminated.
+      terminationGracePeriodSeconds: 30
+
+      # Never cache "latest" — always pull the exact SHA-tagged image so
+      # rollbacks are deterministic.
+      containers:
+        - name: trading-dashboard
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 3010
+              protocol: TCP
+
+          # ── Container-level security ────────────────────────────────────────
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Drop every Linux capability; the process only needs network access
+            # which is granted by default without any capability.
+            capabilities:
+              drop: ["ALL"]
+
+          # ── Resource limits ─────────────────────────────────────────────────
+          # Requests are what Kubernetes schedules on; limits cap burst usage.
+          # Tune these based on observed p95 metrics in production.
+          resources:
+            requests:
+              cpu:    100m
+              memory: 256Mi
+            limits:
+              cpu:    500m
+              memory: 512Mi
+
+          # ── Probes ──────────────────────────────────────────────────────────
+          # Startup probe gives MetaAPI time to complete its initial handshake
+          # before liveness checks begin.  30 * 10 s = 5 min maximum.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 30
+            periodSeconds:    10
+
+          # Liveness: restart the pod if it stops responding.
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds:       30
+            timeoutSeconds:      5
+            failureThreshold:    3
+
+          # Readiness: only route traffic once the pod is serving healthy responses.
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds:       10
+            timeoutSeconds:      3
+            failureThreshold:    3
+
+          # ── Environment ─────────────────────────────────────────────────────
+          # Non-sensitive config comes from the ConfigMap; credentials come from
+          # the Secret.  Keeping them in separate sources makes rotation easier
+          # and limits the blast radius of a secret leak.
+          envFrom:
+            - configMapRef:
+                name: trading-dashboard-config
+            - secretRef:
+                name: trading-dashboard-credentials

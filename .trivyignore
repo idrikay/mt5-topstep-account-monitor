@@ -1,0 +1,62 @@
+# .trivyignore
+#
+# Each entry must include a justification so reviewers can verify the
+# suppression is intentional and the reasoning remains valid over time.
+# Re-evaluate all entries on each major dependency upgrade.
+
+# CVE-2019-10768 — AngularJS prototype pollution in merge()
+# Package : angular 0.0.0 (AngularJS 1.x, not Angular 2+)
+# Source  : transitive dependency pulled in by metaapi.cloud-sdk
+# Reason  : AngularJS is never loaded or executed in this Node.js process.
+#           The vulnerable code path (client-side template rendering) has no
+#           server-side attack surface. No fix is available without replacing
+#           the MetaAPI SDK itself.
+CVE-2019-10768
+
+# CVE-2023-46233 / GHSA-xwcq-pm8m-c4vf — crypto-js: PBKDF2 1,000x weaker than specified
+# Package : crypto-js 4.1.1 (fixed in 4.2.0)
+# Source  : nested dependency bundled inside metaapi.cloud-sdk's own node_modules.
+#           Not reachable by npm audit fix — only resolvable by downgrading
+#           metaapi.cloud-sdk to v23 (breaking change).
+# Reason  : crypto-js is used internally by the MetaAPI SDK for WebSocket
+#           message signing — not for any PBKDF2 key derivation exposed to
+#           this application. Re-evaluate when metaapi.cloud-sdk updates crypto-js.
+CVE-2023-46233
+GHSA-xwcq-pm8m-c4vf
+
+# CVE-2021-23358 — underscore: arbitrary code execution via _.template()
+# Package : underscore 1.4.4 (fixed in 1.12.1)
+# Source  : transitive dependency of metaapi.cloud-sdk
+# Reason  : The vulnerability requires an attacker to control the template
+#           string passed to _.template(). The MetaAPI SDK uses underscore
+#           as an internal utility library; no user-supplied data reaches
+#           _.template() in this server-side process.
+#           Scoped overrides failed to reach this package without breaking
+#           the SDK. Re-evaluate when metaapi.cloud-sdk updates underscore.
+CVE-2021-23358
+
+# GHSA-r5fr-rjxr-66jc — lodash: Code injection via _.template imports key names
+# GHSA-f23m-r3pf-42rh — lodash: Prototype pollution via array path bypass
+# Package : lodash (transitive dep of metaapi.cloud-sdk)
+# Reason  : Fixing requires downgrading metaapi.cloud-sdk to v23.1.1, which
+#           removes the streaming connection API used by this application.
+#           lodash is used internally by the MetaAPI SDK — no user-controlled
+#           input is passed to _.template() or _.unset() in this process.
+CVE-2021-23337
+CVE-2022-31167
+
+# GHSA-6fx8-h7jm-663j — parseuri: ReDoS via crafted URI string
+# Package : parseuri (transitive dep via socket.io-client in metaapi.cloud-sdk)
+# Reason  : Same constraint — only fixable via breaking metaapi.cloud-sdk
+#           downgrade. The vulnerable URI parser is used internally by the
+#           MetaAPI SDK's WebSocket layer; no user-supplied URIs reach it.
+CVE-2022-3627
+
+# GHSA-cf4h-3jhx-xvhq — underscore: Arbitrary code execution via _.template()
+# GHSA-qpx9-hpmf-5gmw — underscore: Unlimited recursion DoS in _.flatten/_.isEqual
+# Package : underscore (transitive dep of metaapi.cloud-sdk)
+# Reason  : Same constraint as above. Already documented for CVE-2021-23358;
+#           these are additional advisories for the same package/version.
+#           Re-evaluate when metaapi.cloud-sdk updates its dependencies.
+CVE-2021-23358
+CVE-2024-45796

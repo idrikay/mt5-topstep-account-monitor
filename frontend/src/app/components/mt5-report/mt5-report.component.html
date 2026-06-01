@@ -1,0 +1,173 @@
+<div class="mt5-report-container">
+  <!-- Header -->
+  <div class="report-header">
+    <h1>MT5 Trading Reports</h1>
+    <div class="connection-status" [class.connected]="isConnected">
+      {{ connectionStatus }}
+    </div>
+  </div>
+
+  <!-- Date Range Selection -->
+  <div class="report-controls">
+    <div class="date-inputs">
+      <div class="form-group">
+        <label for="startDate">Start Date:</label>
+        <input 
+          type="date" 
+          id="startDate" 
+          [(ngModel)]="startDate"
+          [max]="maxDate"
+          class="date-input"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="endDate">End Date:</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          [(ngModel)]="endDate"
+          [max]="maxDate"
+          [min]="startDate"
+          class="date-input"
+        >
+      </div>
+    </div>
+
+    <button 
+      class="generate-btn"
+      (click)="generateReport()"
+      [disabled]="isLoading || !startDate || !endDate"
+    >
+      <span *ngIf="!isLoading">Generate Report</span>
+      <span *ngIf="isLoading" class="loading">
+        <span class="spinner"></span>
+        Generating...
+      </span>
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Account Tabs -->
+  <div *ngIf="accountReports.length > 0" class="account-tabs">
+    <button 
+      *ngFor="let account of accountReports; let i = index"
+      class="tab-btn"
+      [class.active]="selectedAccountIndex === i"
+      (click)="selectAccount(i)"
+    >
+      {{ account.accountName }}
+      <span class="badge">{{ account.report.length }}</span>
+    </button>
+  </div>
+
+  <!-- Report Table -->
+  <div *ngIf="selectedAccount" class="report-content">
+    <!-- Account Summary -->
+    <div class="account-summary">
+      <div class="summary-card">
+        <span class="label">Account:</span>
+        <span class="value">{{ selectedAccount.accountName }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Broker:</span>
+        <span class="value">{{ selectedAccount.broker }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Balance:</span>
+        <span class="value">{{ formatCurrency(selectedAccount.balance, selectedAccount.currency) }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Total Trades:</span>
+        <span class="value">{{ selectedAccount.report.length }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Total P&L:</span>
+        <span class="value" [class.positive]="totalPnL > 0" [class.negative]="totalPnL < 0">
+          {{ formatCurrency(totalPnL, selectedAccount.currency) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Trades Table -->
+    <div class="table-container">
+      <table class="trades-table">
+        <thead>
+          <tr>
+            <th (click)="sortBy('contractName')" [class.sortable]="true" [class.sorted]="isSortedBy('contractName')">
+              Contract {{ getSortIcon('contractName') }}
+            </th>
+            <th (click)="sortBy('enteredAt')" [class.sortable]="true" [class.sorted]="isSortedBy('enteredAt')">
+              Entered At {{ getSortIcon('enteredAt') }}
+            </th>
+            <th (click)="sortBy('exitedAt')" [class.sortable]="true" [class.sorted]="isSortedBy('exitedAt')">
+              Exited At {{ getSortIcon('exitedAt') }}
+            </th>
+            <th (click)="sortBy('entryPrice')" [class.sortable]="true" [class.sorted]="isSortedBy('entryPrice')">
+              Entry Price {{ getSortIcon('entryPrice') }}
+            </th>
+            <th (click)="sortBy('exitPrice')" [class.sortable]="true" [class.sorted]="isSortedBy('exitPrice')">
+              Exit Price {{ getSortIcon('exitPrice') }}
+            </th>
+            <th (click)="sortBy('size')" [class.sortable]="true" [class.sorted]="isSortedBy('size')">
+              Size {{ getSortIcon('size') }}
+            </th>
+            <th (click)="sortBy('type')" [class.sortable]="true" [class.sorted]="isSortedBy('type')">
+              Type {{ getSortIcon('type') }}
+            </th>
+            <th (click)="sortBy('fees')" [class.sortable]="true" [class.sorted]="isSortedBy('fees')">
+              Fees {{ getSortIcon('fees') }}
+            </th>
+            <th (click)="sortBy('commissions')" [class.sortable]="true" [class.sorted]="isSortedBy('commissions')">
+              Commission {{ getSortIcon('commissions') }}
+            </th>
+            <th (click)="sortBy('pnl')" [class.sortable]="true" [class.sorted]="isSortedBy('pnl')">
+              P&L {{ getSortIcon('pnl') }}
+            </th>
+            <th (click)="sortBy('tradeDuration')" [class.sortable]="true" [class.sorted]="isSortedBy('tradeDuration')">
+              Duration {{ getSortIcon('tradeDuration') }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let trade of sortedReport" [class.profitable]="getPnLValue(trade.pnl) > 0">
+            <td>{{ trade.contractName }}</td>
+            <td>{{ trade.enteredAt }}</td>
+            <td>{{ trade.exitedAt }}</td>
+            <td>{{ trade.entryPrice }}</td>
+            <td>{{ trade.exitPrice }}</td>
+            <td>{{ trade.size }}</td>
+            <td class="type-cell" [class.long]="trade.type === 'LONG'" [class.short]="trade.type === 'SHORT'">
+              {{ trade.type }}
+            </td>
+            <td>{{ formatCurrency(getPnLValue(trade.fees)) }}</td>
+            <td>{{ formatCurrency(getPnLValue(trade.commissions)) }}</td>
+            <td [class.positive]="getPnLValue(trade.pnl) > 0" [class.negative]="getPnLValue(trade.pnl) < 0">
+              {{ formatCurrency(getPnLValue(trade.pnl)) }}
+            </td>
+            <td>{{ trade.tradeDuration }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Export Options -->
+    <div class="export-options">
+      <button (click)="exportToCSV()" class="export-btn">
+        Export to CSV
+      </button>
+      <button (click)="exportToJSON()" class="export-btn">
+        Export to JSON
+      </button>
+    </div>
+  </div>
+
+  <!-- No Data Message -->
+  <div *ngIf="!isLoading && accountReports.length === 0 && wasGenerated" class="no-data">
+    No trades found for the selected date range.
+  </div>
+</div>

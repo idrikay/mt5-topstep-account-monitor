@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-dashboard-config
+  namespace: apps
+data:
+  PORT:                    "3010"
+  # Set to the URL your Angular frontend is served from so the CORS
+  # allow-list is restricted to a single origin.
+  FRONTEND_URL:            "https://your-frontend-domain.com"
+  NODE_ENV: "production"
+
+  # TopStepX base URLs — override only if using a staging environment.
+  DEFAULT_TOPSTEP_API_URL: "https://api.topstepx.com"
+  DEFAULT_TOPSTEP_RTC_URL: "https://rtc.topstepx.com"
+
+  # Non-sensitive account labels shown in logs and the UI.
+  # Add more entries (MT5_2_NAME, TOPSTEP_2_NAME, …) as needed.
+  MT5_1_NAME:      "MT5 Main"
+  TOPSTEP_1_NAME:  "TopStep Main"

@@ -1,0 +1,854 @@
+<app-mt5-report />
+
+<div class="app-container">
+  <header class="app-header">
+    <h1>Account monitor</h1>
+    <div class="header-actions">
+
+      @if (accountService.mt5Accounts().length > 0) {
+        <button class="refresh-btn" (click)="refreshMT5Data()" title="Refresh MT5 Data">
+          🔄 Refresh MT5
+        </button>
+      }
+
+      <div class="connection-status"
+           [class.connected]="connectionStatus() === 'connected'"
+           [class.disconnected]="connectionStatus() === 'disconnected'">
+        <span class="status-indicator"></span>
+        {{ connectionStatusLabel() }}
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Disconnected banner — shown whenever the socket drops.
+       Socket.IO reconnects automatically; this tells the user
+       the data they're seeing may be stale. -->
+  @if (isDisconnected()) {
+    <div class="disconnected-banner" role="alert">
+      <span class="disconnected-icon">⚠️</span>
+      <span>Connection lost — data last updated <strong>{{ lastUpdatedLabel() }}</strong></span>
+      <span class="reconnecting-label">Reconnecting…</span>
+    </div>
+  }
+
+  <main class="main-content" [class.stale]="isDisconnected()">
+
+    <!-- ── Total Performance Panel ──────────────────────────────────────────── -->
+    @if (accountService.accounts().length > 0) {
+      <div class="panel daily-stats-panel total-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">📈</span>
+            Total Performance ({{ accountService.accounts().length }} accounts)
+            <span class="panel-badge total-badge">Total</span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('totalStats')">
+            {{ panelVisibility().totalStats ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().totalStats">
+          <div class="daily-stats-grid">
+
+            <div class="stat-card primary live">
+              <div class="stat-icon">💵</div>
+              <div class="stat-content">
+                <div class="stat-label">Net P&L (After Fees)</div>
+                <div class="stat-value">{{ formatCurrency(totalStats().netPnL) }}</div>
+                <div class="stat-sublabel">Real money made/lost</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-label">Gross P&L</div>
+                <div class="stat-value">{{ formatCurrency(totalStats().totalPnL) }}</div>
+                <div class="stat-sublabel">Fees: {{ formatCurrency(totalStats().totalFees) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Round Trips</div>
+                <div class="stat-value">{{ totalStats().roundTripTrades }}</div>
+                <div class="stat-sublabel">
+                  <span class="positive">{{ totalStats().winningTrades }} W</span> /
+                  <span class="breakeven">{{ totalStats().breakevenTrades }} BE</span> /
+                  <span class="negative">{{ totalStats().losingTrades }} L</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <div class="stat-label">Total Executions</div>
+                <div class="stat-value">{{ totalStats().totalExecutions }}</div>
+                <div class="stat-sublabel">All fills/orders</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="breakeven-note">
+            <small>ℹ️ Breakeven trades: P&L between -$10 and +$10</small>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Real Account Performance Panel ───────────────────────────────────── -->
+    @if (accountService.realAccounts().length > 0) {
+      <div class="panel daily-stats-panel real-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">📈</span>
+            Funded ({{ accountService.realAccounts().length }} accounts)
+            <span class="panel-badge live-badge">LIVE</span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('realStats')">
+            {{ panelVisibility().realStats ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().realStats">
+          <div class="daily-stats-grid">
+
+            <div class="stat-card primary live">
+              <div class="stat-icon">💵</div>
+              <div class="stat-content">
+                <div class="stat-label">Net P&L (After Fees)</div>
+                <div class="stat-value" [class]="realStats().netPnL | pnlClass">
+                  {{ formatCurrency(realStats().netPnL) }}
+                </div>
+                <div class="stat-sublabel">Real money made/lost</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-label">Gross P&L</div>
+                <div class="stat-value" [class]="realStats().totalPnL | pnlClass">
+                  {{ formatCurrency(realStats().totalPnL) }}
+                </div>
+                <div class="stat-sublabel">Fees: {{ formatCurrency(realStats().totalFees) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Round Trips</div>
+                <div class="stat-value">{{ realStats().roundTripTrades }}</div>
+                <div class="stat-sublabel">
+                  <span class="positive">{{ realStats().winningTrades }} W</span> /
+                  <span class="breakeven">{{ realStats().breakevenTrades }} BE</span> /
+                  <span class="negative">{{ realStats().losingTrades }} L</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <div class="stat-label">Total Executions</div>
+                <div class="stat-value">{{ realStats().totalExecutions }}</div>
+                <div class="stat-sublabel">All fills/orders</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-content">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" [class]="(realStats().winRate - 50) | pnlClass">
+                  {{ formatPercent(realStats().winRate) }}
+                </div>
+                <div class="stat-sublabel">Excludes breakeven</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Win</div>
+                <div class="stat-value positive">{{ formatCurrency(realStats().averageWin) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📉</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Loss</div>
+                <div class="stat-value negative">{{ formatCurrency(realStats().averageLoss) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🚀</div>
+              <div class="stat-content">
+                <div class="stat-label">Best Trade</div>
+                <div class="stat-value positive">{{ formatCurrency(realStats().bestTrade) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">⚠️</div>
+              <div class="stat-content">
+                <div class="stat-label">Worst Trade</div>
+                <div class="stat-value negative">{{ formatCurrency(realStats().worstTrade) }}</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="breakeven-note">
+            <small>ℹ️ Breakeven trades: P&L between -$10 and +$10</small>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── MT5 Performance Panel ─────────────────────────────────────────────── -->
+    @if (accountService.mt5Accounts().length > 0) {
+      <div class="panel daily-stats-panel mt5-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">📊</span>
+            MT5 Performance ({{ accountService.mt5Accounts().length }} accounts)
+            <span class="panel-badge mt5-badge">MT5</span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('mt5Stats')">
+            {{ panelVisibility().mt5Stats ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().mt5Stats">
+          <div class="daily-stats-grid">
+
+            <div class="stat-card primary mt5">
+              <div class="stat-icon">💵</div>
+              <div class="stat-content">
+                <div class="stat-label">Net P&L (After Fees)</div>
+                <div class="stat-value" [class]="mt5Stats().netPnL | pnlClass">
+                  {{ formatCurrency(mt5Stats().netPnL) }}
+                </div>
+                <div class="stat-sublabel">Realized P&L</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-label">Unrealized P&L</div>
+                <div class="stat-value" [class]="mt5Stats().unrealizedPnL | pnlClass">
+                  {{ formatCurrency(mt5Stats().unrealizedPnL) }}
+                </div>
+                <div class="stat-sublabel">Open positions</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-label">Gross P&L</div>
+                <div class="stat-value" [class]="mt5Stats().totalPnL | pnlClass">
+                  {{ formatCurrency(mt5Stats().totalPnL) }}
+                </div>
+                <div class="stat-sublabel">Commission: {{ formatCurrency(mt5Stats().totalFees) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <div class="stat-label">Swap</div>
+                <div class="stat-value" [class]="mt5Stats().totalSwap | pnlClass">
+                  {{ formatCurrency(mt5Stats().totalSwap) }}
+                </div>
+                <div class="stat-sublabel">Overnight fees</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Round Trips</div>
+                <div class="stat-value">{{ mt5Stats().roundTripTrades }}</div>
+                <div class="stat-sublabel">
+                  <span class="positive">{{ mt5Stats().winningTrades }} W</span> /
+                  <span class="breakeven">{{ mt5Stats().breakevenTrades }} BE</span> /
+                  <span class="negative">{{ mt5Stats().losingTrades }} L</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-content">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" [class]="(mt5Stats().winRate - 50) | pnlClass">
+                  {{ formatPercent(mt5Stats().winRate) }}
+                </div>
+                <div class="stat-sublabel">Excludes breakeven</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Win</div>
+                <div class="stat-value positive">{{ formatCurrency(mt5Stats().averageWin) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📉</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Loss</div>
+                <div class="stat-value negative">{{ formatCurrency(mt5Stats().averageLoss) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🚀</div>
+              <div class="stat-content">
+                <div class="stat-label">Best Trade</div>
+                <div class="stat-value positive">{{ formatCurrency(mt5Stats().bestTrade) }}</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="breakeven-note">
+            <small>ℹ️ Breakeven trades: P&L between -$10 and +$10 | Swap fees included in calculations</small>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Practice Account Performance Panel ───────────────────────────────── -->
+    @if (accountService.practiceAccounts().length > 0) {
+      <div class="panel daily-stats-panel practice-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">🎓</span>
+            Practice ({{ accountService.practiceAccounts().length }} accounts)
+            <span class="panel-badge practice-badge">PRACTICE</span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('practiceStats')">
+            {{ panelVisibility().practiceStats ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().practiceStats">
+          <div class="daily-stats-grid">
+
+            <div class="stat-card primary practice">
+              <div class="stat-icon">💵</div>
+              <div class="stat-content">
+                <div class="stat-label">Net P&L (After Fees)</div>
+                <div class="stat-value" [class]="practiceStats().netPnL | pnlClass">
+                  {{ formatCurrency(practiceStats().netPnL) }}
+                </div>
+                <div class="stat-sublabel">Practice money</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-label">Gross P&L</div>
+                <div class="stat-value" [class]="practiceStats().totalPnL | pnlClass">
+                  {{ formatCurrency(practiceStats().totalPnL) }}
+                </div>
+                <div class="stat-sublabel">Fees: {{ formatCurrency(practiceStats().totalFees) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Round Trips</div>
+                <div class="stat-value">{{ practiceStats().roundTripTrades }}</div>
+                <div class="stat-sublabel">
+                  <span class="positive">{{ practiceStats().winningTrades }} W</span> /
+                  <span class="breakeven">{{ practiceStats().breakevenTrades }} BE</span> /
+                  <span class="negative">{{ practiceStats().losingTrades }} L</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <div class="stat-label">Total Executions</div>
+                <div class="stat-value">{{ practiceStats().totalExecutions }}</div>
+                <div class="stat-sublabel">All fills/orders</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-content">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" [class]="(practiceStats().winRate - 50) | pnlClass">
+                  {{ formatPercent(practiceStats().winRate) }}
+                </div>
+                <div class="stat-sublabel">Excludes breakeven</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Win</div>
+                <div class="stat-value positive">{{ formatCurrency(practiceStats().averageWin) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📉</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Loss</div>
+                <div class="stat-value negative">{{ formatCurrency(practiceStats().averageLoss) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🚀</div>
+              <div class="stat-content">
+                <div class="stat-label">Best Trade</div>
+                <div class="stat-value positive">{{ formatCurrency(practiceStats().bestTrade) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">⚠️</div>
+              <div class="stat-content">
+                <div class="stat-label">Worst Trade</div>
+                <div class="stat-value negative">{{ formatCurrency(practiceStats().worstTrade) }}</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="breakeven-note">
+            <small>ℹ️ Breakeven trades: P&L between -$10 and +$10</small>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Derivatives Performance Panel ────────────────────────────────────── -->
+    @if (accountService.derivativesAccounts().length > 0) {
+      <div class="panel daily-stats-panel derivative-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">🎓</span>
+            Derivative Performance ({{ accountService.derivativesAccounts().length }} accounts)
+            <span class="panel-badge derivative-badge">DERIVATIVE</span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('derivativesStats')">
+            {{ panelVisibility().derivativesStats ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().derivativesStats">
+          <div class="daily-stats-grid">
+
+            <div class="stat-card primary derivative">
+              <div class="stat-icon">💵</div>
+              <div class="stat-content">
+                <div class="stat-label">Net P&L (After Fees)</div>
+                <div class="stat-value" [class]="derivativesStats().netPnL | pnlClass">
+                  {{ formatCurrency(derivativesStats().netPnL) }}
+                </div>
+                <div class="stat-sublabel">Real money made/lost</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-label">Gross P&L</div>
+                <div class="stat-value" [class]="derivativesStats().totalPnL | pnlClass">
+                  {{ formatCurrency(derivativesStats().totalPnL) }}
+                </div>
+                <div class="stat-sublabel">Fees: {{ formatCurrency(derivativesStats().totalFees) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-content">
+                <div class="stat-label">Round Trips</div>
+                <div class="stat-value">{{ derivativesStats().roundTripTrades }}</div>
+                <div class="stat-sublabel">
+                  <span class="positive">{{ derivativesStats().winningTrades }} W</span> /
+                  <span class="breakeven">{{ derivativesStats().breakevenTrades }} BE</span> /
+                  <span class="negative">{{ derivativesStats().losingTrades }} L</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <div class="stat-label">Total Executions</div>
+                <div class="stat-value">{{ derivativesStats().totalExecutions }}</div>
+                <div class="stat-sublabel">All fills/orders</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-content">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" [class]="(derivativesStats().winRate - 50) | pnlClass">
+                  {{ formatPercent(derivativesStats().winRate) }}
+                </div>
+                <div class="stat-sublabel">Excludes breakeven</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Win</div>
+                <div class="stat-value positive">{{ formatCurrency(derivativesStats().averageWin) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📉</div>
+              <div class="stat-content">
+                <div class="stat-label">Avg Loss</div>
+                <div class="stat-value negative">{{ formatCurrency(derivativesStats().averageLoss) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🚀</div>
+              <div class="stat-content">
+                <div class="stat-label">Best Trade</div>
+                <div class="stat-value positive">{{ formatCurrency(derivativesStats().bestTrade) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">⚠️</div>
+              <div class="stat-content">
+                <div class="stat-label">Worst Trade</div>
+                <div class="stat-value negative">{{ formatCurrency(derivativesStats().worstTrade) }}</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="breakeven-note">
+            <small>ℹ️ Breakeven trades: P&L between -$10 and +$10</small>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Open Positions Panel ──────────────────────────────────────────────── -->
+    @if (accountService.positionsSummary().length > 0) {
+      <div class="panel positions-panel">
+        <div class="panel-header">
+          <h2>
+            <span class="panel-icon">📊</span>
+            Open Positions ({{ accountService.positionsSummary().length }})
+            <span class="total-pnl" [class]="totalPositionsPnL() | pnlClass">
+              Unrealized P&L: {{ formatCurrency(totalPositionsPnL()) }}
+            </span>
+          </h2>
+          <button class="toggle-panel-btn" (click)="togglePanel('positions')">
+            {{ panelVisibility().positions ? '▲ Hide' : '▼ Show' }}
+          </button>
+        </div>
+
+        <div class="panel-content" [class.collapsed]="!panelVisibility().positions">
+          <div class="positions-grid">
+
+            @for (position of accountService.positionsSummary(); track position.positionId) {
+              <div class="position-card" [class.mt5-position]="position.platform === 'mt5'">
+
+                <div class="position-header">
+                  <div class="position-title">
+                    <span class="contract-id">
+                      {{ position.symbol ?? position.contractId | instrumentName }}
+                    </span>
+                    <span class="position-type"
+                          [class.long]="position.type === 'Long'"
+                          [class.short]="position.type === 'Short'">
+                      {{ position.type }}
+                    </span>
+                    <span class="platform-tag"
+                          [class.mt5-tag]="position.platform === 'mt5'"
+                          [class.topstep-tag]="position.platform === 'topstep'">
+                      {{ position.platform === 'mt5' ? 'MT5' : 'TS' }}
+                    </span>
+                  </div>
+                  <div class="position-pnl"
+                       [class]="(position.unrealizedPnL ?? position.realizedPnL ?? 0) | pnlClass">
+                    {{ formatCurrency(position.unrealizedPnL ?? position.realizedPnL ?? 0) }}
+                  </div>
+                </div>
+
+                <div class="position-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Platform:</span>
+                    <span class="detail-value" [ngClass]="getPlatformClass(position.platformName)">
+                      {{ position.platformName }}
+                    </span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Size:</span>
+                    <span class="detail-value">{{ position.size }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Entry:</span>
+                    <span class="detail-value">{{ position.entryPrice }}</span>
+                  </div>
+                  @if (position.currentPrice) {
+                    <div class="detail-row">
+                      <span class="detail-label">Current:</span>
+                      <span class="detail-value">{{ position.currentPrice }}</span>
+                    </div>
+                  }
+                  <div class="detail-row">
+                    <span class="detail-label">Opened:</span>
+                    <span class="detail-value">{{ formatDate(position.openedAt) }}</span>
+                  </div>
+                  <div class="detail-row duration-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value duration-value">
+                      {{ position.openedAt | duration:tick() }}
+                    </span>
+                  </div>
+                  @if (position.stopLoss) {
+                    <div class="detail-row">
+                      <span class="detail-label">Stop Loss:</span>
+                      <span class="detail-value negative">{{ position.stopLoss }}</span>
+                    </div>
+                  }
+                  @if (position.takeProfit) {
+                    <div class="detail-row">
+                      <span class="detail-label">Take Profit:</span>
+                      <span class="detail-value positive">{{ position.takeProfit }}</span>
+                    </div>
+                  }
+                  @if (position.swap) {
+                    <div class="detail-row">
+                      <span class="detail-label">Swap:</span>
+                      <span class="detail-value" [class]="position.swap | pnlClass">
+                        {{ formatCurrency(position.swap) }}
+                      </span>
+                    </div>
+                  }
+                  @if (position.commission) {
+                    <div class="detail-row">
+                      <span class="detail-label">Commission:</span>
+                      <span class="detail-value negative">{{ formatCurrency(position.commission) }}</span>
+                    </div>
+                  }
+                </div>
+
+              </div>
+            }
+
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Accounts Summary Panel ────────────────────────────────────────────── -->
+    <div class="panel accounts-panel">
+      <div class="panel-header">
+        <h2>
+          <span class="panel-icon">💼</span>
+          Accounts Summary ({{ accountService.accounts().length }})
+          <span class="total-balance">
+            Balance: {{ formatCurrency(accountService.totalBalance()) }}
+            @if (accountService.mt5Accounts().length > 0) {
+              <span class="equity-display">
+                | Equity: {{ formatCurrency(accountService.totalEquity()) }}
+              </span>
+            }
+          </span>
+        </h2>
+        <button class="toggle-panel-btn" (click)="togglePanel('accounts')">
+          {{ panelVisibility().accounts ? '▲ Hide' : '▼ Show' }}
+        </button>
+      </div>
+
+      <div class="panel-content" [class.collapsed]="!panelVisibility().accounts">
+        <div class="accounts-grid">
+
+          @for (account of accountService.accounts(); track account.id) {
+            <div class="account-card"
+                 [class.mt5-account]="account.platform === 'mt5'"
+                 [class.projectx-account]="account.platform === 'topstep'"
+                 [class.daytraders-account]="accountService.isCombine(account)">
+
+              <div class="account-header">
+                <div class="account-title">
+                  <h3>
+                    {{ account.name }}
+                    <span class="account-type-badge"
+                          [class.practice]="accountService.isPractice(account)"
+                          [class.mt5]="account.platform === 'mt5'"
+                          [class.live]="account.platform === 'topstep' && !accountService.isPractice(account)">
+                      {{ account.platform === 'mt5' ? 'MT5' : (accountService.isPractice(account) ? 'PRACTICE' : 'LIVE') }}
+                    </span>
+                  </h3>
+                  <div class="account-pnl"
+                       [class]="statsService.getAccountTotalPnL(account) | pnlClass">
+                    P&L: {{ formatCurrency(statsService.getAccountTotalPnL(account)) }}
+                  </div>
+                </div>
+                <div class="account-balance">
+                  <div class="balance-main">{{ formatCurrency(account.balance, account.currency) }}</div>
+                  @if (account.platform === 'mt5') {
+                    <div class="balance-label">Balance</div>
+                  }
+                </div>
+              </div>
+
+              <!-- MT5 Specific Account Info -->
+              @if (account.platform === 'mt5') {
+                <div class="mt5-account-info">
+                  <div class="mt5-stat">
+                    <span class="mt5-stat-label">Equity</span>
+                    <span class="mt5-stat-value">{{ formatCurrency(account.equity ?? 0, account.currency) }}</span>
+                  </div>
+                  <div class="mt5-stat">
+                    <span class="mt5-stat-label">Unrealized</span>
+                    <span class="mt5-stat-value" [class]="(account.profit ?? 0) | pnlClass">
+                      {{ formatCurrency(account.profit ?? 0, account.currency) }}
+                    </span>
+                  </div>
+                  <div class="mt5-stat">
+                    <span class="mt5-stat-label">Margin</span>
+                    <span class="mt5-stat-value">{{ formatCurrency(account.margin ?? 0, account.currency) }}</span>
+                  </div>
+                  <div class="mt5-stat">
+                    <span class="mt5-stat-label">Free Margin</span>
+                    <span class="mt5-stat-value">{{ formatCurrency(account.freeMargin ?? 0, account.currency) }}</span>
+                  </div>
+                  @if (account.marginLevel) {
+                    <div class="mt5-stat">
+                      <span class="mt5-stat-label">Margin Level</span>
+                      <span class="mt5-stat-value"
+                            [class.warning]="account.marginLevel < 150"
+                            [class.danger]="account.marginLevel < 100">
+                        {{ formatMarginLevel(account.marginLevel) }}
+                      </span>
+                    </div>
+                  }
+                  @if (account.leverage) {
+                    <div class="mt5-stat">
+                      <span class="mt5-stat-label">Leverage</span>
+                      <span class="mt5-stat-value">{{ formatLeverage(account.leverage) }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="account-stats">
+                <div class="stat-item">
+                  <span class="stat-label">Positions</span>
+                  <span class="stat-value">{{ account.positions.length }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">{{ account.platform === 'mt5' ? 'Deals' : 'Trades' }}</span>
+                  <span class="stat-value">{{ account.trades.length }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Realized</span>
+                  <span class="stat-value" [class]="statsService.getAccountNetPnL(account) | pnlClass">
+                    {{ formatCurrency(statsService.getAccountNetPnL(account)) }}
+                  </span>
+                </div>
+                @if (account.platform === 'mt5') {
+                  <div class="stat-item">
+                    <span class="stat-label">Unrealized</span>
+                    <span class="stat-value"
+                          [class]="statsService.getAccountUnrealizedPnL(account) | pnlClass">
+                      {{ formatCurrency(statsService.getAccountUnrealizedPnL(account)) }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <!-- Trades / Deals List -->
+              @if (account.trades.length) {
+                <div class="trades-section">
+                  <h4>Recent {{ account.platform === 'mt5' ? 'Deals' : 'Trades' }}</h4>
+                  <div class="trades-list">
+                    @for (trade of account.trades; track trade.id) {
+                      <div class="trade-item">
+                        <div class="trade-info">
+                          <span class="trade-contract">
+                            {{ statsService.getTradeSymbol(trade) | instrumentName }}
+                          </span>
+                          <span class="trade-side"
+                                [class.buy]="trade.side === 0 || trade.type === 'DEAL_TYPE_BUY'"
+                                [class.sell]="trade.side === 1 || trade.type === 'DEAL_TYPE_SELL'">
+                            {{ trade.type ?? (trade.side === 0 ? 'BUY' : 'SELL') }}
+                          </span>
+                          <span class="trade-size">{{ statsService.getTradeSize(trade) }}x</span>
+                          <span class="trade-price">&#64; {{ trade.price }}</span>
+                        </div>
+                        <div class="trade-pnl"
+                             [class]="statsService.getTradePnL(trade) | pnlClass">
+                          {{ formatCurrency(statsService.getTradePnL(trade)) }}
+                          @if (isBreakeven(statsService.getTradePnL(trade)) && statsService.getTradePnL(trade) !== 0) {
+                            <span class="trade-label">BE</span>
+                          }
+                        </div>
+                        <div class="trade-time">
+                          {{ formatDate(statsService.getTradeTimestamp(trade)) }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Positions List -->
+              @if (account.positions.length) {
+                <div class="positions-section">
+                  <h4>Open Positions</h4>
+                  <div class="positions-list">
+                    @for (position of account.positions; track position.id) {
+                      <div class="position-item">
+                        <div class="position-info">
+                          <span class="position-contract">{{ getPositionSymbol(position) }}</span>
+                          <span class="position-type-badge"
+                                [class.long]="getPositionType(position) === 'LONG'"
+                                [class.short]="getPositionType(position) === 'SHORT'">
+                            {{ getPositionType(position) }}
+                          </span>
+                          <span class="position-size">{{ getPositionSize(position) }}x</span>
+                          <span class="position-entry">&#64; {{ getPositionEntryPrice(position) }}</span>
+                        </div>
+                        <div class="position-pnl" [class]="getPositionPnL(position) | pnlClass">
+                          {{ formatCurrency(getPositionPnL(position)) }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+            </div>
+          }
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

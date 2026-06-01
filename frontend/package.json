@@ -1,0 +1,36 @@
+{
+  "name": "topstepx-monitor-frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --port 4210",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "all": "npm-run-all --parallel backend frontend",
+    "backend": "npm run start --prefix ../backend",
+    "frontend": "npm start"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^18.2.0",
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/forms": "^18.2.0",
+    "@angular/platform-browser": "^18.2.0",
+    "@angular/platform-browser-dynamic": "^18.2.0",
+    "express": "^5.2.1",
+    "npm-run-all": "^4.1.5",
+    "rxjs": "~7.8.0",
+    "socket.io-client": "^4.7.2",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.2"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^18.2.0",
+    "@angular/cli": "^18.2.0",
+    "@angular/compiler-cli": "^18.2.0",
+    "@types/node": "^20.10.0",
+    "typescript": "~5.5.2"
+  }
+}
